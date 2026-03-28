@@ -48,7 +48,7 @@ El sistema implementa una arquitectura desacoplada orientada a controlar la gest
       ┌──────────────┐           ┌──────────────┐            ┌──────────────┐
       │ AWS WAF      │           │ GCP WAF      │            │ Imperva WAF  │
       └──────────────┘           └──────────────┘            └──────────────┘
-
+```
 ---
 
 # Componentes
