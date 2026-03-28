@@ -1,1 +1,33 @@
 # docker-compose.yml
+version: "3.9"
+
+x-app-env: &app-config
+  environment:
+    DATABASE_URL: "postgresql://admin:password!!-=-@db:5432/ip_manager"
+  depends_on:
+    - db
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    <<: *app-config
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    <<: *app-config
+    command: ["python", "-m", "app.workers.expiration_worker"]
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password!!-=-
+      POSTGRES_DB: ip_manager
+    ports:
+      - "5432:5432"
