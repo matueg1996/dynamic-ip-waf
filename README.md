@@ -110,7 +110,7 @@ Para que el programa funcione correctamente, tener instalados:
 - **Terraform** (opcional, para Infraestructura como código).
 - Python 3.9+ (si se ejecuta localmente sin Docker).
 
-### Ejecución con Docker (Recomendado)
+### Ejecución con Docker
 La solución está empaquetada en contenedores. Para desplegar:
 1. Navegue al directorio raíz del proyecto.
 2. Configure sus variables de entorno.
