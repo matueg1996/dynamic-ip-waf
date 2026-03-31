@@ -1,6 +1,6 @@
 # Dynamic IP WAF
 
-Un sistema de control centralizado, dinámico y totalmente automatizado para gestionar listas de acceso de IPs (Allowlist y Blocklist) a través de múltiples soluciones de Web Application Firewall (WAF) tales como AWS WAF, GCP Cloud Armor e Imperva.
+Un sistema de control centralizado, dinámico y automatizado para gestionar listas de acceso de IPs (Allowlist y Blocklist) a través de múltiples soluciones de Web Application Firewall (WAF) tales como AWS WAF, GCP Cloud Armor e Imperva.
 
 ## Contexto y Propósito del Proyecto
 
