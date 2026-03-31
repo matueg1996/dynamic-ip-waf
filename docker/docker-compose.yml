@@ -1,0 +1,33 @@
+# Orquestación de contenedores Docker.
+version: "3.9"
+
+x-app-env: &app-config
+  environment:
+    DATABASE_URL: "${DATABASE_URL}"
+  depends_on:
+    - db
+
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    <<: *app-config
+    ports:
+      - "8000:8000"
+
+  worker:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    <<: *app-config
+    command: ["python", "-m", "app.workers.expiration_worker"]
+
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password!!-=-}
+      POSTGRES_DB: ${POSTGRES_DB:-ip_manager}
+    ports:
+      - "5432:5432"
