@@ -159,7 +159,7 @@ Son consumidores pasivos del estado
 
 ---
 
-# Stack Tecnológico y Librerías Clave
+# Stack y Librerías Clave
 
 Las decisiones del ecosistema base responden a la necesidad de rendimiento bajo I/O intensiva, simplicidad operativa y tipado seguro en frontera:
 
