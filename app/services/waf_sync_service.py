@@ -1,7 +1,12 @@
+"""
+Servicio de sincronización con el WAF.
+Consulta el endpoint /export de la API y aplica los cambios en los proveedores de nube.
+"""
+import os
 import requests
 
-API_URL = "http://api:8000/export"
-API_KEY = "mi-api-key"
+API_URL = os.getenv("WAF_EXPORT_URL", "http://api:8000/export")
+API_KEY = os.getenv("API_KEY", "mi-api-key")
 
 def sync_waf():
     headers = {"x-api-key": API_KEY}

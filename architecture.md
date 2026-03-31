@@ -53,7 +53,7 @@ El sistema implementa una arquitectura desacoplada orientada a controlar la gest
 
 # Componentes
 
-## 1. Slack (Interfaz de usuario)
+## Slack (Interfaz de usuario)
 
 Punto de entrada para los usuarios.
 
@@ -69,7 +69,7 @@ Maneja:
 
 ---
 
-## 2. FastAPI (Control Plane)
+## FastAPI (Control Plane)
 
 Responsable de:
 
@@ -86,11 +86,11 @@ Endpoints clave:
 - `GET /export`: Genera una vista consolidada de IPs a procesar. Solamente el *Sync Service* consume esta ruta.
 - `POST /accion`: Webhook dedicado exclusivo para procesar el payload de los comandos enviados nativamente desde los tableros interactivos de Slack.
 
-👉 Es el cerebro del sistema
+Cerebro del sistema
 
 ---
 
-## 3. PostgreSQL (Source of Truth)
+## PostgreSQL (Source of Truth)
 
 Almacena:
 
@@ -99,11 +99,11 @@ Almacena:
 - Ambientes
 - Historial básico (estado)
 
-👉 Es la fuente de verdad
+Fuente de verdad
 
 ---
 
-## 4. Worker de expiración (TTL)
+## Worker de expiración (TTL)
 
 Proceso continuo que:
 
@@ -114,11 +114,11 @@ Proceso continuo que:
 expira_en < now → estado = expirada
 ```
 
-👉 No toca el WAF directamente
+No se toca el WAF directamente
 
 ---
 
-## 5. Export API (/export)
+## Export API (/export)
 
 Expone el estado actual del sistema:
 
@@ -131,11 +131,11 @@ Expone el estado actual del sistema:
 }
 ```
 
-👉 Punto clave de integración
+Punto clave de integración
 
 ---
 
-## 6. WAF Sync Service
+## WAF Sync Service
 
 Componente que:
 - Consume `/export`
@@ -148,14 +148,14 @@ Componente que:
 
 ---
 
-## 7. WAFs (Execution Layer)
+## WAFs (Execution Layer)
 
 Ejemplos:
 - AWS WAF
 - GCP Cloud Armor
 - Imperva
 
-👉 Son consumidores pasivos del estado
+Consumidores pasivos del estado
 
 ---
 
@@ -167,6 +167,8 @@ Las decisiones del ecosistema base responden a la necesidad de rendimiento bajo 
 - **Pydantic (`pydantic`):** Fomenta una barrera de bioseguridad. Su función es evaluar y validar rigurosamente la estructura y tipos (Data Transfer Object) de cada petición originada en Slack *antes* de ejecutar cualquier lógica de negocio, repeliendo payloads arbitrarios malformados instantáneamente.
 - **SQLAlchemy (`sqlalchemy`):** ORM que permite modelar la tabla de IPs y sus estados abstrayendo el motor subyacente. Permite consultas complejas, simplifica los chequeos por ambiente e introduce mecanismos que blindan el acceso frente a inyecciones SQL.
 - **PostgreSQL (`psycopg2`):** Base relacional elegida no solo por ser el estándar de la industria, sino por su potente soporte ACID y nivel de bloqueo transaccional (*Row-level locks*), fundamental para evitar condiciones de carrera si dos administradores actúan sobre el mismo requerimiento de Slack simultáneamente.
+- **Requests (`requests`):** Librería cliente HTTP utilizada por el *WAF Sync Service* para consumir el endpoint de exportación de la API de forma sencilla y confiable, manejando cabeceras de autenticación y payloads JSON.
+- **Python-dotenv (`python-dotenv`):** Componente clave para la gestión de la configuración. Permite desacoplar los secretos y variables de entorno del código fuente, cargándolos automáticamente desde un archivo `.env` local, facilitando la portabilidad entre entornos de desarrollo, staging y producción.
 
 ---
 

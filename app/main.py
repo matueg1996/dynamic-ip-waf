@@ -1,3 +1,7 @@
+"""
+Punto de entrada principal de la aplicación FastAPI.
+Configura los routers, la base de datos y los middlewares.
+"""
 from fastapi import FastAPI
 from app.api.rutas import router
 from app.api.slack import slack_router

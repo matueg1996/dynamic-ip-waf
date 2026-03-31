@@ -1,3 +1,7 @@
+"""
+Integración con Slack.
+Maneja los webhooks de comandos de voz y acciones de botones.
+"""
 from fastapi import APIRouter, Request
 from datetime import datetime, timedelta
 from app.services.servicio_ip import crear_ip

@@ -1,3 +1,8 @@
+"""
+Manejo de rutas genéricas de la API.
+Incluye endpoints para /ip, /aprobar, /export y eliminación de IPs.
+"""
+import os
 from fastapi import APIRouter, Header, HTTPException
 from datetime import datetime, timedelta
 from app.services.servicio_ip import crear_ip, aprobar_ip, revocar_ip
@@ -5,7 +10,7 @@ from app.services.exportador_waf import exportar_listas
 
 router = APIRouter()
 
-API_KEY = "mi-api-key"
+API_KEY = os.getenv("API_KEY", "mi-api-key")
 
 def validar_api_key(api_key: str):
     if api_key != API_KEY:

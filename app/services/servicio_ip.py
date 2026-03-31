@@ -1,3 +1,7 @@
+"""
+Servicio de gestión de IPs.
+Contiene la lógica para crear, aprobar, obtener y revocar IPs en la base de datos.
+"""
 import uuid
 from app.db.database import SessionLocal
 from app.db.esquemas import TablaIP

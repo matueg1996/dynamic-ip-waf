@@ -1,3 +1,7 @@
+"""
+Worker de expiración de IPs.
+Corre en segundo plano y marca como 'expiradas' las IPs cuyo TTL ha vencido.
+"""
 import time
 from datetime import datetime
 from app.db.database import SessionLocal

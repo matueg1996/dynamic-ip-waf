@@ -18,7 +18,16 @@ resource "aws_instance" "ip_manager" {
 
               cd /home/ec2-user
               git clone https://your-repo.git
-              cd dynamic-ip-waf/docker
+              cd dynamic-ip-waf
+
+              # Generar archivo .env para la aplicación
+              cat <<ENV > .env
+              DATABASE_URL=postgresql://admin:password!!-=-@db:5432/ip_manager
+              API_KEY=mi-api-key
+              WAF_EXPORT_URL=http://api:8000/export
+              ENV
+
+              cd docker
               docker-compose up -d
               EOF
 }

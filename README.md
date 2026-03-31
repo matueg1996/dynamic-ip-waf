@@ -105,16 +105,39 @@ El código está estructurado bajo principios de arquitecturas limpias y una sep
 ## Despliegue y Ejecución
 
 ### Prerrequisitos
-Para que el programa funcione correctamente, tener instalados:
+Para que funcione correctamente, tener instalados:
 - **Docker** y **Docker Compose** para la versión en contenedores de la solución.
 - **Terraform** (opcional, para Infraestructura como código).
 - Python 3.9+ (si se ejecuta localmente sin Docker).
 
+### Configuración (Variables de Entorno)
+El sistema utiliza un archivo `.env` para gestionar secretos y configuraciones sensibles. Para configurar el entorno:
+
+1. Copie el archivo de ejemplo:
+   ```bash
+   cp .env.example .env
+   ```
+2. editar el archivo `.env` y complete los valores:
+   - `DATABASE_URL`: url de conexión para PostgreSQL (ej. `postgresql://user:password@localhost:5432/ip_manager`).
+   - `API_KEY`: Clave secreta compartida para autorizar peticiones entre servicios. Esta clave es necesaria tanto para el acceso a la API desde el exterior como para que el *WAF Sync Service* pueda descargar las listas de IPs. Sin esta clave (cabecera `x-api-key`), todas las peticiones devolverán un error `401 Unauthorized`.
+   - `WAF_EXPORT_URL`: URL completa del endpoint de exportación (ej. `http://api:8000/export` dentro de Docker).
+   - `SLACK_SIGNING_SECRET`: Secreto de firma de su aplicación Slack para validar webhooks.
+   - `SLACK_BOT_TOKEN`: Token `xoxb-*` de su bot de Slack para enviar notificaciones.
+
+**IMPORTANTE:** Nunca subir archivo `.env` a GitHub. El archivo `.gitignore` ya está configurado para excluirlo.
+
+### Verificación de la Configuración
+Para asegurarse de que el sistema carga correctamente las variables del archivo `.env`, puede ejecutar el script de verificación:
+```bash
+python verify_env.py
+```
+Este script leerá el archivo `.env` y confirmará qué variables están presentes sin revelar sus valores sensibles.
+
 ### Ejecución con Docker (Recomendado)
 La solución está empaquetada en contenedores. Para desplegar:
-1. Navegue al directorio raíz del proyecto.
-2. Configure sus variables de entorno.
-3. Ejecute el comando para levantar la base de datos, el backend y el worker:
+1. Navegar al directorio raíz del proyecto.
+2. Configurar variables de entorno.
+3. Ejecutar el comando para levantar la base de datos, el backend y el worker:
    ```bash
    docker-compose -f docker/docker-compose.yml up -d
    ```

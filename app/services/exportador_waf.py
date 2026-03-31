@@ -1,3 +1,7 @@
+"""
+Servicio de exportación de listas para el WAF.
+Transforma los registros de la base de datos en un formato JSON estructurado por ambiente.
+"""
 from app.services.servicio_ip import obtener_ips_activas
 
 def exportar_listas():

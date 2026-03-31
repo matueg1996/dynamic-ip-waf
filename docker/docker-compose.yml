@@ -3,7 +3,8 @@ version: "3.9"
 
 x-app-env: &app-config
   environment:
-    DATABASE_URL: "postgresql://admin:password!!-=-@db:5432/ip_manager"
+    DATABASE_URL: ${DATABASE_URL:-postgresql://admin:password!!-=-@db:5432/ip_manager}
+    API_KEY: ${API_KEY:-mi-api-key}
   depends_on:
     - db
 
@@ -26,8 +27,8 @@ services:
   db:
     image: postgres:15
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password!!-=-
-      POSTGRES_DB: ip_manager
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password!!-=-}
+      POSTGRES_DB: ${POSTGRES_DB:-ip_manager}
     ports:
       - "5432:5432"

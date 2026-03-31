@@ -1,3 +1,7 @@
+"""
+Modelos de datos (Pydantic).
+Define la estructura de validación para los registros de IP.
+"""
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional

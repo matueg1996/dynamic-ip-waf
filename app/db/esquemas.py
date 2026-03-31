@@ -1,3 +1,7 @@
+"""
+Modelos ORM para SQLAlchemy.
+Define la estructura de la tabla 'ips' en la base de datos PostgreSQL.
+"""
 from sqlalchemy import Column, String, DateTime, Boolean
 from app.db.database import Base
 
