@@ -86,7 +86,7 @@ Endpoints clave:
 - `GET /export`: Genera una vista consolidada de IPs a procesar. Solamente el *Sync Service* consume esta ruta.
 - `POST /accion`: Webhook dedicado exclusivo para procesar el payload de los comandos enviados nativamente desde los tableros interactivos de Slack.
 
-👉 Es el cerebro del sistema
+Cerebro del sistema
 
 ---
 
@@ -99,7 +99,7 @@ Almacena:
 - Ambientes
 - Historial básico (estado)
 
-👉 Es la fuente de verdad
+Fuente de verdad
 
 ---
 
@@ -114,7 +114,7 @@ Proceso continuo que:
 expira_en < now → estado = expirada
 ```
 
-👉 No toca el WAF directamente
+No toca el WAF directamente
 
 ---
 
@@ -131,7 +131,7 @@ Expone el estado actual del sistema:
 }
 ```
 
-👉 Punto clave de integración
+Punto clave de integración
 
 ---
 
@@ -155,7 +155,7 @@ Ejemplos:
 - GCP Cloud Armor
 - Imperva
 
-👉 Son consumidores pasivos del estado
+Son consumidores pasivos del estado
 
 ---
 
