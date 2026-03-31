@@ -124,13 +124,6 @@ El sistema utiliza un archivo `.env` para gestionar secretos y configuraciones s
 
 **IMPORTANTE:** Nunca subir el archivo `.env` a GitHub. El archivo `.gitignore` ya está configurado para excluirlo.
 
-### Verificación de la Configuración
-Para asegurarse de que el sistema carga correctamente las variables del archivo `.env`, puede ejecutar el script de verificación:
-```bash
-python verify_env.py
-```
-Este script leerá el archivo `.env` y confirmará qué variables están presentes sin revelar sus valores sensibles.
-
 ### Ejecución con Docker
 La solución está empaquetada en contenedores. Para desplegar:
 1. Navegar al directorio raíz del proyecto.
