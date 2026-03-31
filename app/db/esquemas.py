@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Boolean
 from app.db.database import Base
 
 class TablaIP(Base):
@@ -12,3 +12,5 @@ class TablaIP(Base):
     contexto_id = Column(String)
     expira_en = Column(DateTime, nullable=True)
     estado = Column(String)
+    entidad = Column(String, nullable=True)
+    es_permanente = Column(Boolean, default=False)

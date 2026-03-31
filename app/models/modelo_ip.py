@@ -10,3 +10,5 @@ class RegistroIP(BaseModel):
     contexto_id: str
     expira_en: Optional[datetime]
     estado: str = "pendiente"
+    entidad: Optional[str] = None
+    es_permanente: bool = False

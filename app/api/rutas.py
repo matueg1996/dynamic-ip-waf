@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Header, HTTPException
 from datetime import datetime, timedelta
-from app.services.servicio_ip import crear_ip, aprobar_ip
+from app.services.servicio_ip import crear_ip, aprobar_ip, revocar_ip
 from app.services.exportador_waf import exportar_listas
 
 router = APIRouter()
@@ -18,12 +18,14 @@ def agregar_ip(
     tipo: str,
     ambiente: str,
     ttl_minutos: int = None,
+    entidad: str = None,
+    es_permanente: bool = False,
     x_api_key: str = Header(None)
 ):
     validar_api_key(x_api_key)
 
     expira_en = None
-    if ttl_minutos:
+    if not es_permanente and ttl_minutos:
         expira_en = datetime.utcnow() + timedelta(minutes=ttl_minutos)
 
     registro = crear_ip({
@@ -33,7 +35,9 @@ def agregar_ip(
         "contexto": "manual",
         "contexto_id": "default",
         "expira_en": expira_en,
-        "estado": "pendiente"
+        "estado": "pendiente",
+        "entidad": entidad,
+        "es_permanente": es_permanente
     })
 
     return {"estado": "pendiente_aprobacion", "registro": registro}
@@ -49,3 +53,9 @@ def aprobar(ip: str, ambiente: str, x_api_key: str = Header(None)):
 def exportar(x_api_key: str = Header(None)):
     validar_api_key(x_api_key)
     return exportar_listas()
+
+
+@router.delete("/ip/{ip}")
+def revocar(ip: str, ambiente: str, x_api_key: str = Header(None)):
+    validar_api_key(x_api_key)
+    return revocar_ip(ip, ambiente)

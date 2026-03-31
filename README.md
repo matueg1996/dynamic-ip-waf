@@ -13,6 +13,32 @@ En entornos de infraestructura web en la nube, bloquear una IP maliciosa o permi
 
 ---
 
+## Beneficios Clave
+- **Mitigación de Errores Humanos:** Nadie toca directamente el WAF ni ingresa a las consolas, evitando daños en reglas productivas o que las excepciones queden de por vida por olvido.
+- **Trazabilidad Absoluta:** Todas las solicitudes, aprobaciones y expiraciones quedan registradas en Slack y en PostgreSQL con fecha y autor. Como estrategia provisoria o alternativa rápida, al tener los logs de auditoría de Slack interconectados a un SIEM Corporativo (ej. Splunk, Datadog), se obtiene trazabilidad y control inmediato de quién solicitó un bloqueo/permiso y quién lo aprobó.
+- **Eficiencia Operativa:** Libera a los equipos de DevOps/Seguridad del trabajo manual rutinario, descentralizando el control de forma confiable.
+- **Higiene por Defecto (TTL):** El sistema garantiza que todo permiso (allowlist) o bloqueo manual caduque solo y desaparezca exactamente en el tiempo solicitado.
+
+---
+
+## Resumen Operativo
+
+### Gestión y Consumo de IPs por el WAF
+Las IPs se gestionan de forma centralizada en la base de datos PostgreSQL. El *WAF Sync Service* consume periódicamente un estado consolidado mediante el endpoint `/export`. Este servicio toma esta vista de IPs aprobadas y hace un reemplazo absoluto (sobrescritura) en los diferentes WAFs. Esto garantiza que el entorno cloud replique exactamente nuestra fuente de la verdad en cada iteración.
+
+### Prevención de Bloqueo de Tráfico Legítimo
+Para evitar el bloqueo de tráfico vital y reducir errores humanos:
+- **Identidad Extendida:** Cada ingreso al sistema permite etiquetar la *entidad* a la que pertenece la IP (ej. un comerciante clave, un proveedor externo o tráfico malicioso). Esto provee un contexto visual rápido al WAF y a las auditorías sobre quién es el afectado por la regla.
+- **Flujos de trabajo de aprobación:** Obliga a seguir un control basado en políticas donde a cada petición de un operador le sigue la revisión/aprobación de un segundo responsable (sistema *Maker-Checker*).
+- **Métricas, registro o alertas:** Se monitorean los cambios de IPs y los intentos denegados, que pueden integrarse a paneles como Grafana para alertar visualmente sobre bloqueos masivos inesperados.
+- **TTL implacable y Reglas Permanentes:** Por defecto, los permisos se eliminan al expirar su *TTL*, previniendo la acumulación de basura legacy. No obstante, existe la opción de marcar IPs esenciales como **permanentes**, desactivando el TTL por completo para permitir o bloquear entidades estáticas a largo plazo (revocables manualmente a través del endpoint `DELETE /ip/{ip}`).
+
+### Supuestos, Limitaciones o Problemas Encontrados
+- **Supuestos:** Las nubes de los proveedores aseguran alta disponibilidad para los endpoints de actualización de seguridad y las credenciales provisionadas no experimentan rotaciones asíncronas no avisadas.
+- **Limitaciones:** El WAF Sync evalúa reemplazos totales cada ciclo en vez de deltas (modificaciones incrementales). Ante listas extraordinariamente grandes, podrían superarse las cuotas estándar (ej. AWS WAF suele limitar a 10.000 direcciones IPv4 por IP Set por defecto con su configuración básica).
+
+---
+
 ## Arquitectura General
 
 El sistema se basa en una arquitectura fuertemente desacoplada y orientada a microservicios que protege las instancias internas, descrita detalladamente en [architecture.md](./architecture.md).
@@ -22,7 +48,22 @@ Está conformado por los siguientes pilares:
 2. **Control Plane (FastAPI)**: La API central (expuesta solo a través de un API Gateway propio y controlada por API Keys). Procesa las validaciones, mantiene la lógica de negocio y determina a qué ambiente afecta cada IP.
 3. **PostgreSQL (Source of Truth)**: Base de datos centralizada; toda IP existente y su estado (pendiente, aprobada, expirada) vive aquí.
 4. **TTL Expiration Worker**: Un proceso asíncrono que barre constantemente la base de datos buscando IPs cuyo tiempo de expiración se haya vencido, descartándolas para la siguiente sincronización.
-5. **WAF Sync Service**: Agente "tonto" pero altamente confiable que consulta el estado completo del endpoint `/export`, y hace reemplazos absolutos en los distintos WAF de la nube (dejándolos como réplicas pasivas de nuestra base de datos).
+5. **WAF Sync Service**: Agente "tonto" que consulta el estado completo del endpoint `/export`, y hace reemplazos absolutos en los distintos WAF de la nube (dejándolos como réplicas pasivas de nuestra base de datos).
+
+---
+
+## Cómo Fluye la Información (Ciclo de Vida)
+
+1. **La Petición:** Alguien en Slack ejecuta un comando (`/allow-ip 192.168.1.1 2h`).
+2. **Validación:** El webhook de Slack llega al `app/api/slack.py`, y en conjunto con `app/services/servicio_ip.py`, se anota la IP como **Pendiente**.
+3. **Consenso:** Un administrador usa el panel en Slack para "Aprobar" la IP, que cambia su estado en la DB de PostgreSQL.
+4. **Propagación:** Regularmente (o triggereado por eventos), el `waf_sync_service.py` lee un archivo consolidado generado por `exportador_waf.py` y sube la nueva lista al WAF elegido pisando la vieja lista.
+5. **Caducidad Automática:** El reloj avanza 2 horas. El `expiration_worker.py` detecta que la IP expiró. En el próximo ciclo del Sync Service, como esta IP ya no aparecerá en el exportador, será removida instantáneamente del WAF, protegiendo automáticamente la aplicación.
+
+---
+
+## Seguridad
+La API no se encuentra expuesta al público general ni a EC2s desprotegidas. Únicamente se invoca a través de tokens firmados o API Gateways limitados (Rate-Limits). Del mismo modo, sus interacciones hacia los WAF son "Pull-based" unidireccionales desde redes seguras.
 
 ---
 
@@ -61,31 +102,43 @@ El código está estructurado bajo principios de arquitecturas limpias y una sep
 
 ---
 
-## Cómo Fluye la Información (Ciclo de Vida)
+## Despliegue y Ejecución
 
-1. **La Petición:** Alguien en Slack ejecuta un comando (`/allow-ip 192.168.1.1 2h`).
-2. **Validación:** El webhook de Slack llega al `app/api/slack.py`, y en conjunto con `app/services/servicio_ip.py`, se anota la IP como **Pendiente**.
-3. **Consenso:** Un administrador usa el panel en Slack para "Aprobar" la IP, que cambia su estado en la DB de PostgreSQL.
-4. **Propagación:** Regularmente (o empujado por eventos), el `waf_sync_service.py` lee un archivo consolidado generado por `exportador_waf.py` y sube la nueva lista al WAF elegido pisando la vieja lista.
-5. **Caducidad Automática:** El reloj avanza 2 horas. El `expiration_worker.py` detecta que la IP expiró. En el próximo ciclo del Sync Service, como esta IP ya no aparecerá en el exportador, será removida instantáneamente del WAF, protegiendo automáticamente la aplicación.
+### Prerrequisitos
+Para que el programa funcione correctamente, tener instalados:
+- **Docker** y **Docker Compose** para la versión en contenedores de la solución.
+- **Terraform** (opcional, para Infraestructura como código).
+- Python 3.9+ (si se ejecuta localmente sin Docker).
 
----
+### Ejecución con Docker (Recomendado)
+La solución está empaquetada en contenedores. Para desplegar:
+1. Navegue al directorio raíz del proyecto.
+2. Configure sus variables de entorno.
+3. Ejecute el comando para levantar la base de datos, el backend y el worker:
+   ```bash
+   docker-compose -f docker/docker-compose.yml up -d
+   ```
+4. La API del plano de control estará disponible en `http://localhost:8000`.
 
-## Seguridad
-La API no se encuentra expuesta al público general ni a EC2s desprotegidas. Únicamente se invoca a través de tokens firmados o API Gateways limitados (Rate-Limits). Del mismo modo, sus interacciones hacia los WAF son "Pull-based" unidireccionales desde redes seguras.
+### Infraestructura como Código (IaC)
+Se incluye soporte base en Terraform (`/terraform`) para automatizar y estandarizar el despliegue de los WAF Web ACLs y reglas en entornos multinube (como AWS y GCP).
 
----
+### Despliegue en AWS (Nube)
+Para llevar el Control Plane a un entorno productivo de Amazon Web Services, se recomienda utilizar:
+- **Amazon ECS con AWS Fargate:** Para correr la imagen de Docker de FastAPI de manera sin servidor (*serverless*) y delegar el escalado al proveedor.
+- **Amazon RDS (PostgreSQL):** Sustituyendo el contenedor local de BD por el servicio gestionado de AWS para garantizar persistencia, alta disponibilidad y respaldos automatizados.
+- **AWS ALB o API Gateway:** Para exponer tu ruta pública (`/accion`) en HTTPS de manera segura, aislando el resto de los microservicios en subredes privadas.
 
-## Beneficios Clave
-- **Mitigación de Errores Humanos:** Nadie toca directamente el WAF ni ingresa a las consolas, evitando daños en reglas productivas o que las excepciones queden de por vida por olvido.
-- **Trazabilidad Absoluta:** Todas las solicitudes, aprobaciones y expiraciones quedan registradas en Slack y en PostgreSQL con fecha y autor.
-- **Eficiencia Operativa:** Libera a los equipos de DevOps/Seguridad del trabajo manual rutinario, descentralizando el control de forma confiable.
-- **Higiene por Defecto (TTL):** El sistema garantiza que todo permiso (allowlist) o bloqueo manual caduque solo y desaparezca exactamente en el tiempo solicitado.
+### Integración con Slack (Configuración Pendiente)
+Para que las peticiones y botones de Slack lleguen de manera exitosa a la API (FastAPI), se necesita completar los siguientes pasos en [Slack API](https://api.slack.com/apps):
+1. **Crear una Slack App:** Desde el espacio de trabajo, crear una aplicación con permisos para usar *Slash Commands* (`/allow-ip`, `/block-ip`).
+2. **Configurar el Webhook (Request URL):** En la sección "Interactivity & Shortcuts", habilitar la interactividad y apuntar la URL de respuesta publicamente hacia el despliegue: `https://<dominio-aws.com>/accion`.
+3. **Firmas y Seguridad:** Extraer el *Signing Secret* y el *Bot User OAuth Token* de Slack para cargarlos como variables de entorno en el contenedor AWS de FastAPI. Esto garantiza que nadie falsifique comandos y la API solo escuche a los servidores autorizados de Slack.
 
 ---
 
 ## Mejoras para Futuras Versiones (Roadmap)
-- **Soporte Multi-Cloud Simultáneo:** Empujar la lista de forma nativa a AWS WAF, GCP Cloud Armor y Cloudflare al mismo tiempo para proteger arquitecturas híbridas.
+- **Soporte Multi-Cloud Simultáneo:** Pushear la lista de forma nativa a AWS WAF, GCP Cloud Armor y Cloudflare al mismo tiempo para proteger arquitecturas híbridas.
 - **Alertas Predictivas:** Notificar automáticamente en Slack cuando el TTL de una IP útil esté a 5 minutos de caducar, permitiendo extenderlo con un click.
 - **Bloques de Subredes (CIDRs):** Admitir notaciones tipo `192.168.1.0/24` en lugar de una única IP.
 - **Métricas y Prometheus:** Exportar estadísticas hacia Grafana para visualizar frecuencias de bloqueo, autores, e historial analítico.

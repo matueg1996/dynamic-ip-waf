@@ -40,3 +40,20 @@ def obtener_ips_activas():
     registros = db.query(TablaIP).filter_by(estado="activa").all()
     db.close()
     return registros
+
+
+def revocar_ip(ip, ambiente):
+    db = SessionLocal()
+    
+    registro = db.query(TablaIP).filter_by(
+        ip=ip,
+        ambiente=ambiente,
+        estado="activa"
+    ).first()
+
+    if registro:
+        registro.estado = "expirada"
+        db.commit()
+
+    db.close()
+    return registro

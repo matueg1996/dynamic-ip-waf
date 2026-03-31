@@ -12,9 +12,11 @@ async def accion_slack(req: Request):
     tipo = payload.get("tipo")
     ambiente = payload.get("ambiente")
     ttl = payload.get("ttl")
+    entidad = payload.get("entidad")
+    es_permanente = payload.get("es_permanente", False)
 
     expira_en = None
-    if ttl:
+    if not es_permanente and ttl:
         expira_en = datetime.utcnow() + timedelta(minutes=int(ttl))
 
     crear_ip({
@@ -24,7 +26,9 @@ async def accion_slack(req: Request):
         "contexto": "slack",
         "contexto_id": "usuario",
         "expira_en": expira_en,
-        "estado": "pendiente"
+        "estado": "pendiente",
+        "entidad": entidad,
+        "es_permanente": es_permanente
     })
 
     return {"text": f"IP {ip} enviada para aprobación en {ambiente}"}
