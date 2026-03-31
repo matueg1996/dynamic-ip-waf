@@ -109,13 +109,13 @@ Para que el programa funcione correctamente, tener instalados:
 - Python 3.9+ (si se ejecuta localmente sin Docker).
 
 ### Configuración (Variables de Entorno)
-El sistema utiliza un archivo `.env` para gestionar secretos y configuraciones sensibles. Siga estos pasos para configurar su entorno:
+El sistema utiliza un archivo `.env` para gestionar secretos y configuraciones sensibles. Seguir estos pasos para configurar el entorno:
 
 1. copiar el archivo de ejemplo:
    ```bash
    cp .env.example .env
    ```
-2. editar el archivo `.env` y complete los valores:
+2. editar el archivo `.env` y completar los valores:
    - `DATABASE_URL`: Cadena de conexión para PostgreSQL.
    - `API_KEY`: Clave secreta compartida para autorizar peticiones entre servicios. Esta clave es necesaria tanto para el acceso a la API desde el exterior como para que el *WAF Sync Service* pueda descargar las listas de IPs. Sin esta clave (cabecera `x-api-key`), todas las peticiones devolverán un error `401 Unauthorized`.
    - `WAF_EXPORT_URL`: URL completa del endpoint de exportación (ej. `http://api:8000/export` dentro de Docker).
@@ -127,7 +127,7 @@ El sistema utiliza un archivo `.env` para gestionar secretos y configuraciones s
 ### Ejecución con Docker
 La solución está empaquetada en contenedores. Para desplegar:
 1. Navegar al directorio raíz del proyecto.
-2. Configurar sus variables de entorno.
+2. Configurar variables de entorno.
 3. Ejecutar el comando para levantar la base de datos, el backend y el worker:
    ```bash
    docker-compose -f docker/docker-compose.yml up -d
