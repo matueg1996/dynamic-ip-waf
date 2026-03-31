@@ -161,7 +161,7 @@ Son consumidores pasivos del estado
 
 # Stack y Librerías Clave
 
-Las decisiones del ecosistema base responden a la necesidad de rendimiento bajo I/O intensiva, simplicidad operativa y tipado seguro en frontera:
+Las decisiones del ecosistema base responden a la necesidad de rendimiento bajo I/O intensiva, simplicidad operativa, y estados seguros:
 
 - **FastAPI (`fastapi`, `uvicorn`):** Seleccionado como el framework web base dadas sus capacidades asincrónicas extremas para lidiar con miles de req/sec consumiendo escasos recursos. Facilita la construcción declarativa y auto-generación de documentación (Swagger), crucial para un equipo DevOps.
 - **Pydantic (`pydantic`):** Fomenta una barrera de bioseguridad. Su función es evaluar y validar rigurosamente la estructura y tipos (Data Transfer Object) de cada petición originada en Slack *antes* de ejecutar cualquier lógica de negocio, repeliendo payloads arbitrarios malformados instantáneamente.
