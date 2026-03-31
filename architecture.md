@@ -164,7 +164,7 @@ Son consumidores pasivos del estado
 Las decisiones del ecosistema base responden a la necesidad de rendimiento bajo I/O intensiva, simplicidad operativa, y estados seguros:
 
 - **FastAPI (`fastapi`, `uvicorn`):** Seleccionado como el framework web base dadas sus capacidades asincrónicas extremas para lidiar con miles de req/sec consumiendo escasos recursos. Facilita la construcción declarativa y auto-generación de documentación (Swagger), crucial para un equipo DevOps.
-- **Pydantic (`pydantic`):** Fomenta una barrera de bioseguridad. Su función es evaluar y validar rigurosamente la estructura y tipos (Data Transfer Object) de cada petición originada en Slack *antes* de ejecutar cualquier lógica de negocio, repeliendo payloads arbitrarios malformados instantáneamente.
+- **Pydantic (`pydantic`):** Fomenta la barrera de seguridad. Su función es evaluar y validar rigurosamente la estructura y tipos (Data Transfer Object) de cada petición originada en Slack *antes* de ejecutar cualquier lógica de negocio, repeliendo payloads arbitrarios malformados instantáneamente.
 - **SQLAlchemy (`sqlalchemy`):** ORM que permite modelar la tabla de IPs y sus estados abstrayendo el motor subyacente. Permite consultas complejas, simplifica los chequeos por ambiente e introduce mecanismos que blindan el acceso frente a inyecciones SQL.
 - **PostgreSQL (`psycopg2`):** Base relacional elegida no solo por ser el estándar de la industria, sino por su potente soporte ACID y nivel de bloqueo transaccional (*Row-level locks*), fundamental para evitar condiciones de carrera si dos administradores actúan sobre el mismo requerimiento de Slack simultáneamente.
 
